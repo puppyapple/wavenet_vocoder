@@ -10,6 +10,8 @@ options:
     --preset=<json>          Path of preset parameters (json).
     -h, --help               Show help message.
 """
+import sys
+sys.path.append('../')
 from docopt import docopt
 import os
 from os.path import join

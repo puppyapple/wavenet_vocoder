@@ -17,7 +17,7 @@ hparams = HParams(
     # input and softmax output are assumed.
     # **NOTE**: if you change the one of the two parameters below, you need to
     # re-run preprocessing before training.
-    input_type="raw",
+    input_type="mulaw",
     quantize_channels=65536,  # 65536 or 256
 
     # Audio:
@@ -29,17 +29,17 @@ hparams = HParams(
     # waveform domain scaling
     global_gain_scale=1.0,
 
-    sample_rate=22050,
+    sample_rate=48000,
     # this is only valid for mulaw is True
     silence_threshold=2,
     num_mels=80,
     fmin=125,
     fmax=7600,
-    fft_size=1024,
+    fft_size=4096,
     # shift can be specified by either hop_size or frame_shift_ms
-    hop_size=256,
-    frame_shift_ms=None,
-    win_length=1024,
+    hop_size=600,
+    frame_shift_ms=12.5,
+    win_length=2400,
     win_length_ms=-1.0,
     window="hann",
 
@@ -69,26 +69,26 @@ hparams = HParams(
     cin_pad=2,
     # If True, use transposed convolutions to upsample conditional features,
     # otherwise repeat features to adjust time resolution
-    upsample_conditional_features=True,
+    upsample_conditional_features=False,
     upsample_net="ConvInUpsampleNetwork",
     upsample_params={
-        "upsample_scales": [4, 4, 4, 4],  # should np.prod(upsample_scales) == hop_size
+        "upsample_scales": [4, 5, 5, 6],  # should np.prod(upsample_scales) == hop_size
     },
 
     # Global conditioning (set negative value to disable)
     # currently limited for speaker embedding
     # this should only be enabled for multi-speaker dataset
     gin_channels=-1,  # i.e., speaker embedding dim
-    n_speakers=7,  # 7 for CMU ARCTIC
+    n_speakers=0,  # 7 for CMU ARCTIC
 
     # Data loader
     pin_memory=True,
-    num_workers=2,
+    num_workers=4,
 
     # Loss
 
     # Training:
-    batch_size=8,
+    batch_size=64,
     optimizer="Adam",
     optimizer_params={
         "lr": 1e-3,
@@ -108,7 +108,7 @@ hparams = HParams(
     # max time steps can either be specified as sec or steps
     # if both are None, then full audio samples are used in a batch
     max_time_sec=None,
-    max_time_steps=10240,  # 256 * 40
+    max_time_steps=24000,  # 256 * 40
 
     # Hold moving averaged parameters and use them for evaluation
     exponential_moving_average=True,
@@ -117,10 +117,10 @@ hparams = HParams(
 
     # Save
     # per-step intervals
-    checkpoint_interval=100000,
-    train_eval_interval=100000,
+    checkpoint_interval=5000,
+    train_eval_interval=5000,
     # per-epoch interval
-    test_eval_epoch_interval=50,
+    test_eval_epoch_interval=100,
     save_optimizer_state=True,
 
     # Eval:
