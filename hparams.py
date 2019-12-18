@@ -17,8 +17,8 @@ hparams = HParams(
     # input and softmax output are assumed.
     # **NOTE**: if you change the one of the two parameters below, you need to
     # re-run preprocessing before training.
-    input_type="mulaw",
-    quantize_channels=65536,  # 65536 or 256
+    input_type="mulaw-quantize",
+    quantize_channels=1024,  # 65536 or 256
 
     # Audio:
     # time-domain pre/post-processing
@@ -40,7 +40,7 @@ hparams = HParams(
     hop_size=600,
     frame_shift_ms=12.5,
     win_length=2400,
-    win_length_ms=-1.0,
+    win_length_ms=50,
     window="hann",
 
     # DC removal
@@ -55,7 +55,7 @@ hparams = HParams(
     # This should equal to `quantize_channels` if mu-law quantize enabled
     # otherwise num_mixture * 3 (pi, mean, log_scale)
     # single mixture case: 2
-    out_channels=10 * 3,
+    out_channels=1024,
     layers=24,
     stacks=4,
     residual_channels=128,
@@ -69,7 +69,7 @@ hparams = HParams(
     cin_pad=2,
     # If True, use transposed convolutions to upsample conditional features,
     # otherwise repeat features to adjust time resolution
-    upsample_conditional_features=False,
+    upsample_conditional_features=True,
     upsample_net="ConvInUpsampleNetwork",
     upsample_params={
         "upsample_scales": [4, 5, 5, 6],  # should np.prod(upsample_scales) == hop_size
@@ -88,7 +88,7 @@ hparams = HParams(
     # Loss
 
     # Training:
-    batch_size=64,
+    batch_size=12,
     optimizer="Adam",
     optimizer_params={
         "lr": 1e-3,

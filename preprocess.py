@@ -8,6 +8,7 @@ options:
     --num_workers=<n>        Num workers.
     --hparams=<parmas>       Hyper parameters [default: ].
     --preset=<json>          Path of preset parameters (json).
+    --local_mel_dir=<p>      Path of local mels.
     -h, --help               Show help message.
 """
 import sys
@@ -21,9 +22,9 @@ import importlib
 from hparams import hparams
 
 
-def preprocess(mod, in_dir, out_root, num_workers):
+def preprocess(mod, in_dir, out_dir, num_workers, local_mel_dir=None):
     os.makedirs(out_dir, exist_ok=True)
-    metadata = mod.build_from_path(in_dir, out_dir, num_workers, tqdm=tqdm)
+    metadata = mod.build_from_path(in_dir, out_dir, local_mel_dir, num_workers, tqdm=tqdm)
     write_metadata(metadata, out_dir)
 
 
@@ -47,6 +48,10 @@ if __name__ == "__main__":
     num_workers = args["--num_workers"]
     num_workers = cpu_count() // 2 if num_workers is None else int(num_workers)
     preset = args["--preset"]
+    
+    # added by wuzijun
+    local_mel_dir = args["--local_mel_dir"]
+    print(local_mel_dir)
 
     # Load preset if specified
     if preset is not None:
@@ -70,4 +75,4 @@ Please use a generic dataset 'wavallin' instead.""")
         sys.exit(1)
 
     mod = importlib.import_module("datasets." + name)
-    preprocess(mod, in_dir, out_dir, num_workers)
+    preprocess(mod, in_dir, out_dir, num_workers, local_mel_dir)

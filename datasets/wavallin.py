@@ -14,19 +14,22 @@ from os.path import join
 from wavenet_vocoder.util import is_mulaw_quantize, is_mulaw, is_raw
 
 
-def build_from_path(in_dir, out_dir, num_workers=1, tqdm=lambda x: x):
+def build_from_path(in_dir, out_dir, local_mel_dir=None, num_workers=1, tqdm=lambda x: x):
     executor = ProcessPoolExecutor(max_workers=num_workers)
     futures = []
     index = 1
     src_files = sorted(glob(join(in_dir, "*.wav")))
-    for wav_path in src_files:
+    # added by wuzijun
+    local_mel_files = [join(local_mel_dir, splitext(basename(path))[0] + ".npy") for path in src_files] if local_mel_dir is not None else [None] * len(src_files)
+    src_couples = zip(src_files, local_mel_files)
+    for wav_path, mel_path in src_couples:
         futures.append(executor.submit(
-            partial(_process_utterance, out_dir, index, wav_path, "dummy")))
+            partial(_process_utterance, out_dir, index, wav_path, mel_path, "dummy")))
         index += 1
     return [future.result() for future in tqdm(futures)]
 
 
-def _process_utterance(out_dir, index, wav_path, text):
+def _process_utterance(out_dir, index, wav_path, mel_path, text):
     # Load the audio to a numpy array:
     wav = audio.load_wav(wav_path)
 
@@ -59,7 +62,7 @@ def _process_utterance(out_dir, index, wav_path, text):
 
     # Compute a mel-scale spectrogram from the trimmed wav:
     # (N, D)
-    mel_spectrogram = audio.logmelspectrogram(wav).astype(np.float32).T
+    mel_spectrogram = audio.logmelspectrogram(wav).astype(np.float32).T if mel_path is None else np.load(mel_path).T
 
     if hparams.global_gain_scale > 0:
         wav *= hparams.global_gain_scale
@@ -91,6 +94,8 @@ def _process_utterance(out_dir, index, wav_path, text):
     if l > 0 or r > 0:
         out = np.pad(out, (l, r), mode="constant", constant_values=constant_values)
     N = mel_spectrogram.shape[0]
+    # if len(out) < N * audio.get_hop_size():
+    #    print(N, len(out))
     assert len(out) >= N * audio.get_hop_size()
 
     # time resolution adjustment
@@ -110,3 +115,5 @@ def _process_utterance(out_dir, index, wav_path, text):
 
     # Return a tuple describing this training example:
     return (audio_filename, mel_filename, N, text)
+
+

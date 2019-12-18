@@ -417,6 +417,7 @@ def ensure_divisible(length, divisible_by=256, lower=True):
 def assert_ready_for_upsampling(x, c, cin_pad):
     assert len(x) == (len(c) - 2 * cin_pad) * audio.get_hop_size()
 
+    
 
 def collate_fn(batch):
     """Create batch
@@ -444,12 +445,16 @@ def collate_fn(batch):
 
     # Time resolution adjustment
     cin_pad = hparams.cin_pad
+    
     if local_conditioning:
         new_batch = []
         for idx in range(len(batch)):
             x, c, g = batch[idx]
+            # tacotron2 output mels is of shape (mel_channel, timestep)
+            c = c.transpose()
+            
             if hparams.upsample_conditional_features:
-                assert_ready_for_upsampling(x, c, cin_pad=0)
+                # assert_ready_for_upsampling(x, c, cin_pad=0)
                 if max_time_steps is not None:
                     max_steps = ensure_divisible(max_time_steps, audio.get_hop_size(), True)
                     if len(x) > max_steps:
@@ -458,7 +463,7 @@ def collate_fn(batch):
                         ts = s * audio.get_hop_size()
                         x = x[ts:ts + audio.get_hop_size() * max_time_frames]
                         c = c[s - cin_pad:s + max_time_frames + cin_pad, :]
-                        assert_ready_for_upsampling(x, c, cin_pad=cin_pad)
+                        # assert_ready_for_upsampling(x, c, cin_pad=cin_pad)
             else:
                 x, c = audio.adjust_time_resolution(x, c)
                 if max_time_steps is not None and len(x) > max_time_steps:
